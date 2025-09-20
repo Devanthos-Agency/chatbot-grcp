@@ -2,14 +2,40 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
 import { motion } from "framer-motion";
-import { AudioLines, Globe, Mic, Plus, ArrowRight } from "lucide-react";
+import { Globe, ArrowRight, Settings } from "lucide-react";
 import {
     Conversation,
     ConversationContent,
     ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+    DialogTrigger,
+    DialogClose,
+} from "@/components/animate-ui/components/radix/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { DEVANTHOS_SYSTEM_PROMPT } from "@/lib/devanthos-prompt";
 import {
     Message,
     MessageContent,
@@ -37,6 +63,108 @@ const suggestions = [
     "Explícame los fundamentos de TypeScript",
     "¿Cómo implementar autenticación segura en aplicaciones?",
 ];
+
+// Opciones de intencionalidad del chatbot
+const CHAT_INTENTS = [
+    {
+        value: "customer-service",
+        label: "Atención al Cliente",
+        description: "Asistente especializado en soporte y atención al cliente",
+    },
+    {
+        value: "sales",
+        label: "Ventas y Comercial",
+        description: "Asistente enfocado en generar leads y cerrar ventas",
+    },
+    {
+        value: "technical-support",
+        label: "Soporte Técnico",
+        description:
+            "Asistente para resolver problemas técnicos y consultas especializadas",
+    },
+    {
+        value: "educational",
+        label: "Educativo",
+        description: "Asistente para enseñar y explicar conceptos",
+    },
+    {
+        value: "consulting",
+        label: "Consultoría",
+        description: "Asistente consultor para brindar asesoría especializada",
+    },
+    {
+        value: "general",
+        label: "Propósito General",
+        description: "Asistente versátil para múltiples propósitos",
+    },
+];
+
+// Función para generar el prompt dinámico
+const generateDynamicPrompt = (
+    assistantName: string,
+    companyInfo: string,
+    chatIntent: string,
+    customPrompt: string,
+    useCustomConfig: boolean
+): string => {
+    if (
+        !useCustomConfig ||
+        (!assistantName && !companyInfo && !chatIntent && !customPrompt)
+    ) {
+        return DEVANTHOS_SYSTEM_PROMPT;
+    }
+
+    const selectedIntent = CHAT_INTENTS.find(
+        (intent) => intent.value === chatIntent
+    );
+
+    let dynamicPrompt = `Eres ${assistantName || "un asistente inteligente"}`;
+
+    if (companyInfo) {
+        dynamicPrompt += ` de ${companyInfo}`;
+    }
+
+    dynamicPrompt += ".\n\n";
+
+    if (selectedIntent) {
+        switch (chatIntent) {
+            case "customer-service":
+                dynamicPrompt +=
+                    "Tu función principal es brindar excelente atención al cliente, resolver consultas, gestionar quejas y asegurar la satisfacción del usuario. Sé empático, profesional y orientado a soluciones.";
+                break;
+            case "sales":
+                dynamicPrompt +=
+                    "Tu objetivo es ayudar a generar ventas, calificar leads, presentar productos/servicios de manera atractiva y guiar a los usuarios hacia la conversión. Sé persuasivo pero no agresivo.";
+                break;
+            case "technical-support":
+                dynamicPrompt +=
+                    "Especialízate en resolver problemas técnicos, proporcionar documentación, guías paso a paso y soluciones precisas. Sé detallado y técnico cuando sea necesario.";
+                break;
+            case "educational":
+                dynamicPrompt +=
+                    "Tu función es enseñar, explicar conceptos complejos de manera simple, proporcionar ejemplos prácticos y fomentar el aprendizaje. Sé didáctico y paciente.";
+                break;
+            case "consulting":
+                dynamicPrompt +=
+                    "Actúa como consultor experto, brinda asesoría estratégica, analiza situaciones y proporciona recomendaciones fundamentadas. Sé analítico y profesional.";
+                break;
+            case "general":
+            default:
+                dynamicPrompt +=
+                    "Eres un asistente versátil capaz de ayudar en múltiples áreas. Adapta tu estilo de respuesta según la consulta del usuario.";
+                break;
+        }
+    }
+
+    if (customPrompt) {
+        dynamicPrompt += `\n\nInstrucciones adicionales:\n${customPrompt}`;
+    }
+
+    dynamicPrompt +=
+        "\n\nSiempre responde de manera clara, profesional y útil.";
+
+    return dynamicPrompt;
+};
 
 // Componente de input con animación
 function AnimatedInput({
@@ -252,10 +380,29 @@ function AnimatedInput({
 }
 
 export default function Chatbot() {
+    const [value, setValue] = useState("");
+    const [searchEnabled, setSearchEnabled] = useState(true);
+    const [configOpen, setConfigOpen] = useState(false);
+
+    // Estados de configuración del chatbot
+    const [assistantName, setAssistantName] = useState("");
+    const [companyInfo, setCompanyInfo] = useState("");
+    const [chatIntent, setChatIntent] = useState("");
+    const [customPrompt, setCustomPrompt] = useState("");
+    const [useCustomConfig, setUseCustomConfig] = useState(false);
+
+    // Generar el prompt actual basado en la configuración
+    const getCurrentPrompt = () => {
+        return generateDynamicPrompt(
+            assistantName,
+            companyInfo,
+            chatIntent,
+            customPrompt,
+            useCustomConfig
+        );
+    };
+
     const { messages, sendMessage, status, error, stop } = useChat({
-        transport: new DefaultChatTransport({
-            api: "/api/chat",
-        }),
         onError: (error) => {
             console.error("Error en el chat:", error);
         },
@@ -263,9 +410,6 @@ export default function Chatbot() {
             console.log("Mensaje completado:", message);
         },
     });
-
-    const [value, setValue] = useState("");
-    const [searchEnabled, setSearchEnabled] = useState(true);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setValue(e.target.value);
@@ -275,7 +419,16 @@ export default function Chatbot() {
         e.preventDefault();
         if (!value.trim()) return;
 
-        sendMessage({ text: value });
+        sendMessage(
+            {
+                text: value,
+            },
+            {
+                body: {
+                    systemPrompt: getCurrentPrompt(),
+                },
+            }
+        );
         setValue("");
     };
 
@@ -286,6 +439,42 @@ export default function Chatbot() {
     const clearConversation = () => {
         window.location.reload(); // Forma simple de limpiar la conversación
     };
+
+    // Manejar guardado de configuración
+    const handleSaveConfig = () => {
+        // Guardar en localStorage para persistencia
+        const config = {
+            assistantName,
+            companyInfo,
+            chatIntent,
+            customPrompt,
+            useCustomConfig,
+        };
+        localStorage.setItem("chatbot-config", JSON.stringify(config));
+        setConfigOpen(false);
+
+        // Si hay mensajes, reiniciar conversación para aplicar nueva configuración
+        if (messages.length > 0) {
+            clearConversation();
+        }
+    };
+
+    // Cargar configuración guardada al inicializar
+    React.useEffect(() => {
+        const savedConfig = localStorage.getItem("chatbot-config");
+        if (savedConfig) {
+            try {
+                const config = JSON.parse(savedConfig);
+                setAssistantName(config.assistantName || "");
+                setCompanyInfo(config.companyInfo || "");
+                setChatIntent(config.chatIntent || "");
+                setCustomPrompt(config.customPrompt || "");
+                setUseCustomConfig(config.useCustomConfig || false);
+            } catch (error) {
+                console.error("Error loading saved config:", error);
+            }
+        }
+    }, []);
 
     // Vista unificada que mantiene la misma UI siempre
     return (
@@ -337,7 +526,7 @@ export default function Chatbot() {
                                     "absolute -z-10",
                                     messages.length > 0
                                         ? "top-0 -left-1/4 blur-lg"
-                                        : "-top-12 blur-xl"
+                                        : "-top-24 blur-xl md:-top-12"
                                 )}
                             >
                                 {messages.length > 0
@@ -595,46 +784,278 @@ export default function Chatbot() {
 
                         <div className="flex h-10 w-full items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <Plus className="size-4 cursor-pointer text-muted-foreground hover:text-foreground transition-colors" />
-                                <span
-                                    onClick={() =>
-                                        setSearchEnabled(!searchEnabled)
-                                    }
-                                    className={cn(
-                                        "flex cursor-pointer items-center gap-2 rounded-full px-2 py-1 text-sm transition-all",
-                                        searchEnabled &&
-                                            "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                    )}
-                                >
-                                    <motion.span
-                                        animate={{
-                                            rotate: searchEnabled ? 90 : 0,
-                                        }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        <Globe className="size-4 cursor-pointer" />
-                                    </motion.span>
-                                    Búsqueda
-                                </span>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <span
+                                            onClick={() =>
+                                                setSearchEnabled(!searchEnabled)
+                                            }
+                                            className={cn(
+                                                "flex cursor-pointer items-center gap-2 rounded-full px-2 py-1 text-sm transition-all",
+                                                searchEnabled &&
+                                                    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                            )}
+                                        >
+                                            <motion.span
+                                                animate={{
+                                                    rotate: searchEnabled
+                                                        ? 90
+                                                        : 0,
+                                                }}
+                                                transition={{ duration: 0.3 }}
+                                            >
+                                                <Globe className="size-4 cursor-pointer" />
+                                            </motion.span>
+                                            Búsqueda
+                                        </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>
+                                            {searchEnabled
+                                                ? "Desactivar"
+                                                : "Activar"}{" "}
+                                            búsqueda web
+                                        </p>
+                                    </TooltipContent>
+                                </Tooltip>
                             </div>
                             <div className="flex items-center gap-4">
                                 {messages.length > 0 && (
-                                    <motion.button
-                                        onClick={clearConversation}
-                                        className="px-3 py-1 text-xs bg-secondary text-secondary-foreground rounded-full hover:bg-secondary/80 transition-colors"
-                                        initial={{ opacity: 0, scale: 0 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: 0.5 }}
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                    >
-                                        Nueva conversación
-                                    </motion.button>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <motion.button
+                                                onClick={clearConversation}
+                                                className="px-3 py-1 text-xs bg-secondary text-secondary-foreground rounded-full hover:bg-secondary/80 transition-colors"
+                                                initial={{
+                                                    opacity: 0,
+                                                    scale: 0,
+                                                }}
+                                                animate={{
+                                                    opacity: 1,
+                                                    scale: 1,
+                                                }}
+                                                transition={{ delay: 0.5 }}
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                            >
+                                                Nueva conversación
+                                            </motion.button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>
+                                                Iniciar una nueva conversación
+                                            </p>
+                                        </TooltipContent>
+                                    </Tooltip>
                                 )}
-                                <Mic className="size-4 cursor-pointer text-muted-foreground hover:text-foreground transition-colors" />
-                                <span className="bg-foreground/10 hover:bg-foreground/20 flex size-8 cursor-pointer items-center justify-center gap-2 rounded-full text-sm transition-colors">
-                                    <AudioLines className="size-4" />
-                                </span>
+
+                                <Dialog
+                                    open={configOpen}
+                                    onOpenChange={setConfigOpen}
+                                >
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <DialogTrigger asChild>
+                                                <Settings className="size-4 cursor-pointer text-muted-foreground hover:text-foreground transition-colors" />
+                                            </DialogTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Configurar chatbot</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                    <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                                        <DialogHeader>
+                                            <DialogTitle>
+                                                Configuración del Chatbot
+                                            </DialogTitle>
+                                            <DialogDescription>
+                                                Personaliza el comportamiento
+                                                del asistente para tener un demo
+                                                interactivo. Si no configuras
+                                                nada, se usará el prompt
+                                                predeterminado de Devanthos.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-6 py-4">
+                                            {/* Toggle para usar configuración personalizada */}
+                                            <div className="flex items-center space-x-2">
+                                                <input
+                                                    type="checkbox"
+                                                    id="use-custom-config"
+                                                    checked={useCustomConfig}
+                                                    onChange={(e) =>
+                                                        setUseCustomConfig(
+                                                            e.target.checked
+                                                        )
+                                                    }
+                                                    className="rounded border-gray-300"
+                                                />
+                                                <Label
+                                                    htmlFor="use-custom-config"
+                                                    className="text-sm font-medium"
+                                                >
+                                                    Usar configuración
+                                                    personalizada
+                                                </Label>
+                                            </div>
+
+                                            {useCustomConfig && (
+                                                <>
+                                                    {/* Nombre del Asistente */}
+                                                    <div className="space-y-2">
+                                                        <Label
+                                                            htmlFor="assistant-name"
+                                                            className="text-sm font-medium"
+                                                        >
+                                                            Nombre del Asistente
+                                                        </Label>
+                                                        <Input
+                                                            id="assistant-name"
+                                                            value={
+                                                                assistantName
+                                                            }
+                                                            onChange={(e) =>
+                                                                setAssistantName(
+                                                                    e.target
+                                                                        .value
+                                                                )
+                                                            }
+                                                            placeholder="Ej: María, Asistente Virtual, Bot de Soporte..."
+                                                        />
+                                                    </div>
+
+                                                    {/* Información de la Empresa */}
+                                                    <div className="space-y-2">
+                                                        <Label
+                                                            htmlFor="company-info"
+                                                            className="text-sm font-medium"
+                                                        >
+                                                            Información de la
+                                                            Empresa
+                                                        </Label>
+                                                        <Input
+                                                            id="company-info"
+                                                            value={companyInfo}
+                                                            onChange={(e) =>
+                                                                setCompanyInfo(
+                                                                    e.target
+                                                                        .value
+                                                                )
+                                                            }
+                                                            placeholder="Ej: TechCorp, tu empresa de tecnología de confianza..."
+                                                        />
+                                                    </div>
+
+                                                    {/* Intencionalidad del Chat */}
+                                                    <div className="space-y-2">
+                                                        <Label
+                                                            htmlFor="chat-intent"
+                                                            className="text-sm font-medium"
+                                                        >
+                                                            Propósito del
+                                                            Chatbot
+                                                        </Label>
+                                                        <Select
+                                                            value={chatIntent}
+                                                            onValueChange={
+                                                                setChatIntent
+                                                            }
+                                                        >
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Selecciona el propósito del chatbot" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {CHAT_INTENTS.map(
+                                                                    (
+                                                                        intent
+                                                                    ) => (
+                                                                        <SelectItem
+                                                                            key={
+                                                                                intent.value
+                                                                            }
+                                                                            value={
+                                                                                intent.value
+                                                                            }
+                                                                        >
+                                                                            <div className="flex flex-col">
+                                                                                <span className="font-medium">
+                                                                                    {
+                                                                                        intent.label
+                                                                                    }
+                                                                                </span>
+                                                                                <span className="text-xs text-muted-foreground">
+                                                                                    {
+                                                                                        intent.description
+                                                                                    }
+                                                                                </span>
+                                                                            </div>
+                                                                        </SelectItem>
+                                                                    )
+                                                                )}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+
+                                                    {/* Prompt Personalizado */}
+                                                    <div className="space-y-2">
+                                                        <Label
+                                                            htmlFor="custom-prompt"
+                                                            className="text-sm font-medium"
+                                                        >
+                                                            Instrucciones
+                                                            Adicionales
+                                                            (Opcional)
+                                                        </Label>
+                                                        <Textarea
+                                                            id="custom-prompt"
+                                                            value={customPrompt}
+                                                            onChange={(e) =>
+                                                                setCustomPrompt(
+                                                                    e.target
+                                                                        .value
+                                                                )
+                                                            }
+                                                            placeholder="Agrega instrucciones específicas sobre cómo quieres que se comporte el asistente..."
+                                                            className="min-h-[80px] resize-none"
+                                                        />
+                                                    </div>
+                                                </>
+                                            )}
+
+                                            {/* Vista previa del prompt */}
+                                            <div className="space-y-2">
+                                                <Label className="text-sm font-medium">
+                                                    Vista Previa del Prompt
+                                                </Label>
+                                                <div className="p-3 bg-muted rounded-lg text-xs max-h-32 overflow-y-auto">
+                                                    <pre className="whitespace-pre-wrap font-mono">
+                                                        {getCurrentPrompt().substring(
+                                                            0,
+                                                            500
+                                                        )}
+                                                        ...
+                                                    </pre>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <DialogFooter className="flex gap-2">
+                                            <DialogClose asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    className="flex-1"
+                                                >
+                                                    Cancelar
+                                                </Button>
+                                            </DialogClose>
+                                            <Button
+                                                onClick={handleSaveConfig}
+                                                className="flex-1"
+                                            >
+                                                Guardar Configuración
+                                            </Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
                             </div>
                         </div>
                     </motion.div>
