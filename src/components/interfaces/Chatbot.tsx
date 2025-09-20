@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { motion } from "framer-motion";
-import { Globe, ArrowRight, Settings } from "lucide-react";
+import { Globe, ArrowRight, Settings, Loader2, CircleStop } from "lucide-react";
 import {
     Conversation,
     ConversationContent,
@@ -47,6 +47,7 @@ import { cn } from "@/lib/utils";
 
 import { Marquee } from "@/components/ui/marquee";
 import { AuroraText } from "../ui/aurora-text";
+import { AnimatedShinyText } from "../ui/animated-shiny-text";
 
 // Sugerencias de ejemplo para el marquee
 const suggestions = [
@@ -590,6 +591,12 @@ export default function Chatbot() {
                                                                         ? "Usuario"
                                                                         : "Devanthos Bot"
                                                                 }
+                                                                className={
+                                                                    message.role ===
+                                                                    "user"
+                                                                        ? "order-2 mb-auto mt-1.5"
+                                                                        : "order-1 mb-auto"
+                                                                }
                                                             />
                                                             <MessageContent variant="flat">
                                                                 {message.parts.map(
@@ -664,27 +671,29 @@ export default function Chatbot() {
                                                         <MessageAvatar
                                                             src="/bot-avatar.svg"
                                                             name="Devanthos Bot"
+                                                            className="order-1 mb-auto"
                                                         />
                                                         <MessageContent variant="flat">
                                                             <div className="flex items-center gap-2 text-muted-foreground">
                                                                 <div className="flex gap-1">
-                                                                    <div className="w-2 h-2 bg-current rounded-full animate-pulse"></div>
-                                                                    <div className="w-2 h-2 bg-current rounded-full animate-pulse animation-delay-150"></div>
-                                                                    <div className="w-2 h-2 bg-current rounded-full animate-pulse animation-delay-300"></div>
+                                                                    <Loader2 className="h-4 w-4 animate-spin" />
                                                                 </div>
-                                                                <span className="text-sm">
-                                                                    Escribiendo...
-                                                                </span>
+                                                                <AnimatedShinyText>
+                                                                    Pensando...
+                                                                </AnimatedShinyText>
                                                                 {status ===
                                                                     "streaming" && (
-                                                                    <button
+                                                                    <Button
                                                                         onClick={
                                                                             stop
                                                                         }
-                                                                        className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors dark:bg-red-900 dark:text-red-300"
+                                                                        size={
+                                                                            "icon"
+                                                                        }
+                                                                        className="bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors dark:bg-red-900 dark:text-red-300"
                                                                     >
-                                                                        Detener
-                                                                    </button>
+                                                                        <CircleStop className="h-4 w-4" />
+                                                                    </Button>
                                                                 )}
                                                             </div>
                                                         </MessageContent>
