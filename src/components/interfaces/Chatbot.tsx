@@ -289,14 +289,14 @@ export default function Chatbot() {
 
     // Vista unificada que mantiene la misma UI siempre
     return (
-        <section className="overflow-hidden min-h-screen bg-gradient-to-b from-background to-muted/20">
-            <div className="container py-4 mx-auto flex h-screen w-full flex-col items-center justify-center">
+        <section className="overflow-hidden min-h-screen">
+            <div className="container py-4 px-2 mx-auto flex h-screen w-full flex-col items-center justify-center">
                 <div className="flex h-full w-full max-w-4xl flex-col items-center justify-center gap-4">
                     {/* Header/Title - se reduce cuando hay mensajes */}
                     <motion.div
                         className={cn(
                             "text-center transition-all duration-500",
-                            messages.length > 0 ? "my-4" : "my-[15vh]"
+                            messages.length > 0 ? "my-4" : "my-[20vh]"
                         )}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -307,7 +307,7 @@ export default function Chatbot() {
                                 "font-semibold tracking-tighter transition-all duration-500",
                                 messages.length > 0
                                     ? "text-2xl mb-2"
-                                    : "text-4xl mb-8"
+                                    : "text-5xl mb-8"
                             )}
                         >
                             <AuroraText
@@ -317,6 +317,28 @@ export default function Chatbot() {
                                     "#6248fe",
                                     "#6248fe",
                                 ]}
+                                className={cn(
+                                    "relative ",
+                                    messages.length > 0 ? "left-1/4" : ""
+                                )}
+                            >
+                                {messages.length > 0
+                                    ? "ChatBot Devanthos"
+                                    : "¿En qué te puedo ayudar hoy?"}
+                            </AuroraText>
+                            <AuroraText
+                                colors={[
+                                    "#ff6449",
+                                    "#ff6449",
+                                    "#6248fe",
+                                    "#6248fe",
+                                ]}
+                                className={cn(
+                                    "absolute -z-10",
+                                    messages.length > 0
+                                        ? "top-0 -left-1/4 blur-lg"
+                                        : "-top-12 blur-xl"
+                                )}
                             >
                                 {messages.length > 0
                                     ? "ChatBot Devanthos"
