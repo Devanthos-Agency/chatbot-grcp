@@ -7,12 +7,21 @@ export const maxDuration = 30;
 
 export async function POST(req: Request) {
     try {
-        const { messages }: { messages: UIMessage[] } = await req.json();
+        const {
+            messages,
+            systemPrompt,
+        }: {
+            messages: UIMessage[];
+            systemPrompt?: string;
+        } = await req.json();
+
+        // Usar el prompt personalizado si se proporciona, sino usar el predeterminado de Devanthos
+        const finalSystemPrompt = systemPrompt || DEVANTHOS_SYSTEM_PROMPT;
 
         // Create a chat completion stream with Google Gemini
         const result = await streamText({
             model: google("gemini-2.5-flash"),
-            system: DEVANTHOS_SYSTEM_PROMPT,
+            system: finalSystemPrompt,
             messages: convertToModelMessages(messages),
             temperature: 0.7,
         });
