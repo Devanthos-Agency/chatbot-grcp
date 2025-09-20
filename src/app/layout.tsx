@@ -71,7 +71,7 @@ export default function RootLayout({
     return (
         <html lang="es">
             <body
-                className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen dark w-full relative`}
+                className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-dvh dark w-full relative`}
             >
                 <div
                     className="absolute inset-0 z-0"
