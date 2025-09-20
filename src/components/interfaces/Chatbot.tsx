@@ -479,14 +479,16 @@ export default function Chatbot() {
 
     // Vista unificada que mantiene la misma UI siempre
     return (
-        <section className="overflow-hidden h-dvh min-h-screen">
-            <div className="container py-4 px-2 mx-auto flex h-screen w-full flex-col items-center justify-center">
+        <section className="overflow-hidden h-dvh min-h-dvh">
+            <div className="container py-4 px-2 mx-auto flex h-dvh w-full flex-col items-center justify-center">
                 <div className="flex h-full w-full max-w-4xl flex-col items-center justify-center gap-4">
                     {/* Header/Title - se reduce cuando hay mensajes */}
                     <motion.div
                         className={cn(
                             "text-center transition-all duration-500",
-                            messages.length > 0 ? "my-4" : "my-[20vh]"
+                            messages.length > 0
+                                ? "my-4"
+                                : "my-[8vh] md:my-[20vh]"
                         )}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
