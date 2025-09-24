@@ -3,7 +3,18 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { motion } from "framer-motion";
-import { Globe, ArrowRight, Settings, Loader2, CircleStop } from "lucide-react";
+import {
+    Globe,
+    ArrowRight,
+    Settings,
+    Loader2,
+    CircleStop,
+    Headset,
+    HandCoins,
+    UserRoundCog,
+    GraduationCap,
+    Handshake,
+} from "lucide-react";
 import {
     Conversation,
     ConversationContent,
@@ -48,6 +59,7 @@ import { cn } from "@/lib/utils";
 import { Marquee } from "@/components/ui/marquee";
 import { AuroraText } from "../ui/aurora-text";
 import { AnimatedShinyText } from "../ui/animated-shiny-text";
+import { Checkbox } from "../animate-ui/components/radix/checkbox";
 
 // Sugerencias de ejemplo para el marquee
 const suggestions = [
@@ -71,32 +83,38 @@ const CHAT_INTENTS = [
         value: "customer-service",
         label: "Atención al Cliente",
         description: "Asistente especializado en soporte y atención al cliente",
+        icon: Headset,
     },
     {
         value: "sales",
         label: "Ventas y Comercial",
         description: "Asistente enfocado en generar leads y cerrar ventas",
+        icon: HandCoins,
     },
     {
         value: "technical-support",
         label: "Soporte Técnico",
         description:
             "Asistente para resolver problemas técnicos y consultas especializadas",
+        icon: UserRoundCog,
     },
     {
         value: "educational",
         label: "Educativo",
         description: "Asistente para enseñar y explicar conceptos",
+        icon: GraduationCap,
     },
     {
         value: "consulting",
         label: "Consultoría",
         description: "Asistente consultor para brindar asesoría especializada",
+        icon: Handshake,
     },
     {
         value: "general",
         label: "Propósito General",
         description: "Asistente versátil para múltiples propósitos",
+        icon: Globe,
     },
 ];
 
@@ -178,7 +196,7 @@ function AnimatedInput({
 }: {
     className?: string;
     placeholder: string;
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
     onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
     value: string;
     setValue: (value: string) => void;
@@ -192,9 +210,22 @@ function AnimatedInput({
             color: string;
         }[]
     >([]);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
 
     const [animating, setAnimating] = useState(false);
+
+    // Auto-resize del textarea
+    const autoResize = useCallback(() => {
+        if (inputRef.current) {
+            inputRef.current.style.height = "auto";
+            inputRef.current.style.height =
+                Math.min(inputRef.current.scrollHeight, 120) + "px";
+        }
+    }, []);
+
+    useEffect(() => {
+        autoResize();
+    }, [value, autoResize]);
 
     const draw = useCallback(() => {
         if (!inputRef.current) return;
@@ -303,8 +334,9 @@ function AnimatedInput({
         animateFrame(start);
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter" && !animating) {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === "Enter" && !e.shiftKey && !animating) {
+            e.preventDefault();
             vanishAndSubmit();
         }
     };
@@ -332,7 +364,7 @@ function AnimatedInput({
     return (
         <form
             className={cn(
-                "relative mx-auto h-12 w-full max-w-xl overflow-hidden bg-white shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),_0px_1px_0px_0px_rgba(25,28,33,0.02),_0px_0px_0px_1px_rgba(25,28,33,0.08)] transition duration-200 dark:bg-zinc-800 rounded-2xl",
+                "relative mx-auto min-h-12 w-full max-w-xl overflow-hidden bg-white shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),_0px_1px_0px_0px_rgba(25,28,33,0.02),_0px_0px_0px_1px_rgba(25,28,33,0.08)] transition-all duration-200 dark:bg-zinc-800 rounded-2xl",
                 value && "bg-gray-50 dark:bg-zinc-700",
                 className
             )}
@@ -345,7 +377,7 @@ function AnimatedInput({
                 )}
                 ref={canvasRef}
             />
-            <input
+            <textarea
                 placeholder={placeholder}
                 onChange={(e) => {
                     if (!animating) {
@@ -356,9 +388,9 @@ function AnimatedInput({
                 onKeyDown={handleKeyDown}
                 ref={inputRef}
                 value={value}
-                type="text"
+                rows={1}
                 className={cn(
-                    "relative z-50 h-full w-full border-none bg-transparent px-4 text-sm tracking-tight text-black focus:outline-none focus:ring-0 dark:text-white",
+                    "relative z-50 min-h-12 w-full border-none bg-transparent pl-4 pr-12 py-3 text-sm tracking-tight text-black focus:outline-none focus:ring-0 resize-none overflow-hidden dark:text-white",
                     animating && "text-transparent dark:text-transparent"
                 )}
             />
@@ -366,7 +398,7 @@ function AnimatedInput({
             <button
                 disabled={!value}
                 type="submit"
-                className="absolute right-2 top-1/2 z-50 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black transition duration-200 disabled:bg-gray-100 dark:bg-zinc-900 dark:disabled:bg-zinc-800"
+                className="absolute right-2 bottom-2 z-50 flex h-8 w-8 items-center justify-center rounded-full bg-black transition duration-200 disabled:bg-gray-100 dark:bg-zinc-900 dark:disabled:bg-zinc-800"
             >
                 <motion.div
                     initial={{ scale: 0 }}
@@ -412,7 +444,7 @@ export default function Chatbot() {
         },
     });
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setValue(e.target.value);
     };
 
@@ -786,7 +818,7 @@ export default function Chatbot() {
                     >
                         <AnimatedInput
                             placeholder="¿Cómo te puedo ayudar hoy?"
-                            className="mb-4 h-12 w-full max-w-full bg-transparent shadow-none"
+                            className="mb-4 min-h-12 w-full max-w-full bg-transparent shadow-none"
                             onChange={handleChange}
                             onSubmit={handleSubmit}
                             value={value}
@@ -874,29 +906,36 @@ export default function Chatbot() {
                                             <p>Configurar chatbot</p>
                                         </TooltipContent>
                                     </Tooltip>
-                                    <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                                    <DialogContent className="sm:max-w-2xl max-h-[95vh] overflow-y-auto md:[&::-webkit-scrollbar]:w-2.5 md:[&::-webkit-scrollbar-track]:rounded-full md:[&::-webkit-scrollbar-track]:bg-gray-100 md:[&::-webkit-scrollbar-thumb]:rounded-full md:[&::-webkit-scrollbar-thumb]:bg-gray-300 md:dark:[&::-webkit-scrollbar-track]:bg-neutral-700 md:dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
                                         <DialogHeader>
-                                            <DialogTitle>
+                                            <DialogTitle className="md:text-xl">
                                                 Configuración del Chatbot
                                             </DialogTitle>
-                                            <DialogDescription>
+                                            <DialogDescription className="text-balance">
                                                 Personaliza el comportamiento
-                                                del asistente para tener un demo
-                                                interactivo. Si no configuras
-                                                nada, se usará el prompt
-                                                predeterminado de Devanthos.
+                                                del asistente{" "}
+                                                <strong className="hidden sm:inline">
+                                                    {" "}
+                                                    para tener un demo
+                                                    interactivo con los datos de
+                                                    tu empresa.
+                                                </strong>{" "}
+                                                Si no configuras nada, se usará
+                                                el prompt predeterminado de
+                                                Devanthos.
                                             </DialogDescription>
                                         </DialogHeader>
                                         <div className="grid gap-6 py-4">
                                             {/* Toggle para usar configuración personalizada */}
                                             <div className="flex items-center space-x-2">
-                                                <input
-                                                    type="checkbox"
+                                                <Checkbox
                                                     id="use-custom-config"
                                                     checked={useCustomConfig}
-                                                    onChange={(e) =>
+                                                    onCheckedChange={(
+                                                        checked
+                                                    ) =>
                                                         setUseCustomConfig(
-                                                            e.target.checked
+                                                            checked === true
                                                         )
                                                     }
                                                     className="rounded border-gray-300"
@@ -913,7 +952,7 @@ export default function Chatbot() {
                                             {useCustomConfig && (
                                                 <>
                                                     {/* Nombre del Asistente */}
-                                                    <div className="space-y-2">
+                                                    <div className="space-y-1">
                                                         <Label
                                                             htmlFor="assistant-name"
                                                             className="text-sm font-medium"
@@ -972,7 +1011,7 @@ export default function Chatbot() {
                                                                 setChatIntent
                                                             }
                                                         >
-                                                            <SelectTrigger>
+                                                            <SelectTrigger className="text-start py-6 max-w-86">
                                                                 <SelectValue placeholder="Selecciona el propósito del chatbot" />
                                                             </SelectTrigger>
                                                             <SelectContent>
@@ -988,17 +1027,20 @@ export default function Chatbot() {
                                                                                 intent.value
                                                                             }
                                                                         >
-                                                                            <div className="flex flex-col">
-                                                                                <span className="font-medium">
-                                                                                    {
-                                                                                        intent.label
-                                                                                    }
-                                                                                </span>
-                                                                                <span className="text-xs text-muted-foreground">
-                                                                                    {
-                                                                                        intent.description
-                                                                                    }
-                                                                                </span>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <intent.icon className="hidden md:block" />
+                                                                                <div className="flex flex-col">
+                                                                                    <span className="font-medium">
+                                                                                        {
+                                                                                            intent.label
+                                                                                        }
+                                                                                    </span>
+                                                                                    <span className="text-xs text-muted-foreground">
+                                                                                        {
+                                                                                            intent.description
+                                                                                        }
+                                                                                    </span>
+                                                                                </div>
                                                                             </div>
                                                                         </SelectItem>
                                                                     )
@@ -1038,7 +1080,7 @@ export default function Chatbot() {
                                                 <Label className="text-sm font-medium">
                                                     Vista Previa del Prompt
                                                 </Label>
-                                                <div className="p-3 bg-muted rounded-lg text-xs max-h-32 overflow-y-auto">
+                                                <div className="p-3 bg-muted rounded-lg text-xs max-h-32 overflow-y-auto md:[&::-webkit-scrollbar]:w-2.5 md:[&::-webkit-scrollbar-track]:rounded-full md:[&::-webkit-scrollbar-track]:bg-gray-100 md:[&::-webkit-scrollbar-thumb]:rounded-full md:[&::-webkit-scrollbar-thumb]:bg-gray-300 md:dark:[&::-webkit-scrollbar-track]:bg-neutral-700 md:dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
                                                     <pre className="whitespace-pre-wrap font-mono">
                                                         {getCurrentPrompt().substring(
                                                             0,
