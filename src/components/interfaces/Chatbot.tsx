@@ -337,7 +337,17 @@ function AnimatedInput({
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === "Enter" && !e.shiftKey && !animating) {
             e.preventDefault();
-            vanishAndSubmit();
+            // Enviar directamente sin animación cuando se presiona Enter
+            if (inputRef.current?.value.trim()) {
+                const form = inputRef.current.closest("form");
+                if (form) {
+                    const submitEvent = new Event("submit", {
+                        bubbles: true,
+                        cancelable: true,
+                    });
+                    form.dispatchEvent(submitEvent);
+                }
+            }
         }
     };
 
@@ -345,20 +355,36 @@ function AnimatedInput({
         setAnimating(true);
         draw();
 
-        const value = inputRef.current?.value || "";
-        if (value && inputRef.current) {
+        const currentValue = inputRef.current?.value || "";
+        if (currentValue && inputRef.current) {
             const maxX = newDataRef.current.reduce(
                 (prev, current) => (current.x > prev ? current.x : prev),
                 0
             );
             animate(maxX);
+
+            // Crear y enviar evento de submit después de iniciar la animación
+            setTimeout(() => {
+                const form = inputRef.current?.closest("form");
+                if (form) {
+                    const submitEvent = new Event("submit", {
+                        bubbles: true,
+                        cancelable: true,
+                    });
+                    form.dispatchEvent(submitEvent);
+                }
+            }, 100);
         }
     };
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        vanishAndSubmit();
-        onSubmit(e);
+
+        // Si hay valor, proceder con el envío
+        if (value.trim()) {
+            setValue(""); // Limpiar inmediatamente
+            onSubmit(e); // Enviar el formulario
+        }
     };
 
     return (
@@ -397,7 +423,13 @@ function AnimatedInput({
 
             <button
                 disabled={!value}
-                type="submit"
+                type="button"
+                onClick={(e) => {
+                    e.preventDefault();
+                    if (value.trim()) {
+                        vanishAndSubmit();
+                    }
+                }}
                 className="absolute right-2 bottom-2 z-50 flex h-8 w-8 items-center justify-center rounded-full bg-black transition duration-200 disabled:bg-gray-100 dark:bg-zinc-900 dark:disabled:bg-zinc-800"
             >
                 <motion.div
