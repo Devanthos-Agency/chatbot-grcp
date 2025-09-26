@@ -543,7 +543,7 @@ export default function Chatbot() {
 
     // Vista unificada que mantiene la misma UI siempre
     return (
-        <section className="overflow-hidden h-dvh min-h-dvh">
+        <section className="h-dvh min-h-dvh">
             <div className="container py-4 px-2 mx-auto flex h-dvh w-full flex-col items-center justify-center">
                 <div className="flex h-full w-full max-w-4xl flex-col items-center justify-center gap-4">
                     {/* Header/Title - se reduce cuando hay mensajes */}
@@ -568,10 +568,10 @@ export default function Chatbot() {
                         >
                             <AuroraText
                                 colors={[
-                                    "#ff6449",
-                                    "#ff6449",
-                                    "#6248fe",
-                                    "#6248fe",
+                                    "#ffb199",
+                                    "#ffb199",
+                                    "#a3baff",
+                                    "#a3baff",
                                 ]}
                                 className={cn(
                                     "relative ",
@@ -584,10 +584,10 @@ export default function Chatbot() {
                             </AuroraText>
                             <AuroraText
                                 colors={[
-                                    "#ff6449",
-                                    "#ff6449",
-                                    "#6248fe",
-                                    "#6248fe",
+                                    "#ffb199",
+                                    "#ffb199",
+                                    "#a3baff",
+                                    "#a3baff",
                                 ]}
                                 className={cn(
                                     "absolute -z-10",
