@@ -461,9 +461,9 @@ export default function Chatbot() {
                                         <div className="text-sm text-blue-800">
                                             <p className="font-semibold mb-1">⚠️ Aviso Importante</p>
                                             <p className="text-xs leading-relaxed">
-                                                Este asistente proporciona información orientativa sobre primeros auxilios. 
+                                                Este asistente proporciona información orientativa. 
                                                 <strong className="font-semibold"> NO sustituye atención médica profesional</strong>. 
-                                                En emergencias reales, llama al <strong className="font-bold">107</strong> inmediatamente.
+                                                En emergencias, llama al <strong className="font-bold">107</strong> inmediatamente.
                                             </p>
                                         </div>
                                     </div>
