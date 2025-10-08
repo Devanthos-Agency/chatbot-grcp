@@ -1,0 +1,35 @@
+{
+  "name": "GRCP Argentina - Asistente Virtual de Primeros Auxilios",
+  "short_name": "GRCP IA",
+  "description": "Asistente virtual inteligente de GRCP Argentina para consultas sobre primeros auxilios, RCP y emergencias médicas",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#20B2C4",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["health", "education", "medical"],
+  "lang": "es-AR",
+  "dir": "ltr",
+  "shortcuts": [
+    {
+      "name": "Iniciar consulta",
+      "short_name": "Consultar",
+      "description": "Hacer una consulta al asistente virtual",
+      "url": "/",
+      "icons": [{ "src": "/bot-avatar.svg", "sizes": "96x96" }]
+    }
+  ]
+}

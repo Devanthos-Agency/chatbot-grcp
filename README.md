@@ -324,6 +324,45 @@ Las contribuciones son bienvenidas. Para cambios importantes:
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abre un Pull Request
 
+## 🎨 Meta Tags y Compartir en Redes
+
+El sitio está completamente optimizado para compartirse en redes sociales y mensajería:
+
+### ✅ Implementado
+- **Open Graph**: Facebook, WhatsApp, LinkedIn
+- **Twitter Cards**: Previews enriquecidos en Twitter/X
+- **Structured Data (JSON-LD)**: SEO optimizado para Google
+- **Manifest.json**: PWA ready
+- **Imagen OG dinámica**: Se genera automáticamente en 1200x630px
+
+### 📱 Cómo se ve al compartir
+```
+┌─────────────────────────────┐
+│  [Imagen profesional]       │
+│  GRCP ARGENTINA            │
+│  Asistente Virtual de      │
+│  Primeros Auxilios         │
+│                            │
+│  💙 RCP | 🚑 Emergencias    │
+├─────────────────────────────┤
+│ Descripción atractiva...   │
+│ 🔗 grcp-arg.website        │
+└─────────────────────────────┘
+```
+
+### 📚 Documentación completa
+- `META-TAGS-GUIDE.md` - Guía completa de implementación
+- `METATAGS-SUMMARY.md` - Resumen de funcionalidades
+- `SOCIAL-PREVIEW-EXAMPLES.md` - Ejemplos en cada plataforma
+- `CHECKLIST.md` - Lista de verificación pre-deploy
+
+### 🧪 Validadores
+Después del deploy, verifica en:
+- [Facebook Debugger](https://developers.facebook.com/tools/debug/)
+- [Twitter Validator](https://cards-dev.twitter.com/validator)
+- [LinkedIn Inspector](https://www.linkedin.com/post-inspector/)
+- [Google Rich Results](https://search.google.com/test/rich-results)
+
 ## 📧 Contacto
 
 **GRCP Argentina**
