@@ -6,47 +6,22 @@ import { motion } from "framer-motion";
 import {
     Globe,
     ArrowRight,
-    Settings,
     Loader2,
     CircleStop,
-    Headset,
-    HandCoins,
-    UserRoundCog,
-    GraduationCap,
-    Handshake,
+    AlertCircle,
 } from "lucide-react";
 import {
     Conversation,
     ConversationContent,
     ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter,
-    DialogTrigger,
-    DialogClose,
-} from "@/components/animate-ui/components/radix/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { DEVANTHOS_SYSTEM_PROMPT } from "@/lib/devanthos-prompt";
+import { GRCP_SYSTEM_PROMPT } from "@/lib/grcp-prompt";
 import {
     Message,
     MessageContent,
@@ -55,135 +30,27 @@ import {
 import { Response } from "@/components/ai-elements/response";
 import type { UIMessage } from "@ai-sdk/react";
 import { cn } from "@/lib/utils";
+import { useDailyLimit } from "@/hooks/use-daily-limit";
 
 import { Marquee } from "@/components/ui/marquee";
 import { AuroraText } from "../ui/aurora-text";
 import { AnimatedShinyText } from "../ui/animated-shiny-text";
-import { Checkbox } from "../animate-ui/components/radix/checkbox";
 
-// Sugerencias de ejemplo para el marquee
+// Sugerencias de ejemplo para el marquee - GRCP Argentina
 const suggestions = [
-    "¿Cómo puedo aprender programación desde cero?",
-    "Explícame las últimas tendencias en inteligencia artificial",
-    "¿Cuál es la mejor manera de crear una página web responsive?",
-    "Ayúdame a entender los conceptos básicos de React",
-    "¿Qué son las APIs y cómo funcionan?",
-    "Explícame qué es la computación en la nube",
-    "¿Cómo optimizar el rendimiento de una aplicación web?",
-    "¿Cuáles son las mejores prácticas en desarrollo frontend?",
-    "Ayúdame a crear un plan de carrera en tecnología",
-    "¿Qué es el machine learning y cómo empezar?",
-    "Explícame los fundamentos de TypeScript",
-    "¿Cómo implementar autenticación segura en aplicaciones?",
+    "¿Qué hacer en caso de un paro cardíaco?",
+    "¿Cómo realizar RCP correctamente?",
+    "¿Qué hacer si alguien se está atragantando?",
+    "¿Cuáles son los cursos de primeros auxilios disponibles?",
+    "¿Dónde encuentro desfibriladores en Argentina?",
+    "¿Cómo tratar una herida sangrante?",
+    "¿Qué es la certificación de GRCP Argentina?",
+    "¿Cómo actuar ante una convulsión?",
+    "¿Qué hacer en caso de quemadura?",
+    "¿Cómo identificar un infarto?",
+    "¿Qué recursos educativos tienen disponibles?",
+    "¿Ofrecen capacitaciones para empresas?",
 ];
-
-// Opciones de intencionalidad del chatbot
-const CHAT_INTENTS = [
-    {
-        value: "customer-service",
-        label: "Atención al Cliente",
-        description: "Asistente especializado en soporte y atención al cliente",
-        icon: Headset,
-    },
-    {
-        value: "sales",
-        label: "Ventas y Comercial",
-        description: "Asistente enfocado en generar leads y cerrar ventas",
-        icon: HandCoins,
-    },
-    {
-        value: "technical-support",
-        label: "Soporte Técnico",
-        description:
-            "Asistente para resolver problemas técnicos y consultas especializadas",
-        icon: UserRoundCog,
-    },
-    {
-        value: "educational",
-        label: "Educativo",
-        description: "Asistente para enseñar y explicar conceptos",
-        icon: GraduationCap,
-    },
-    {
-        value: "consulting",
-        label: "Consultoría",
-        description: "Asistente consultor para brindar asesoría especializada",
-        icon: Handshake,
-    },
-    {
-        value: "general",
-        label: "Propósito General",
-        description: "Asistente versátil para múltiples propósitos",
-        icon: Globe,
-    },
-];
-
-// Función para generar el prompt dinámico
-const generateDynamicPrompt = (
-    assistantName: string,
-    companyInfo: string,
-    chatIntent: string,
-    customPrompt: string,
-    useCustomConfig: boolean
-): string => {
-    if (
-        !useCustomConfig ||
-        (!assistantName && !companyInfo && !chatIntent && !customPrompt)
-    ) {
-        return DEVANTHOS_SYSTEM_PROMPT;
-    }
-
-    const selectedIntent = CHAT_INTENTS.find(
-        (intent) => intent.value === chatIntent
-    );
-
-    let dynamicPrompt = `Eres ${assistantName || "un asistente inteligente"}`;
-
-    if (companyInfo) {
-        dynamicPrompt += ` de ${companyInfo}`;
-    }
-
-    dynamicPrompt += ".\n\n";
-
-    if (selectedIntent) {
-        switch (chatIntent) {
-            case "customer-service":
-                dynamicPrompt +=
-                    "Tu función principal es brindar excelente atención al cliente, resolver consultas, gestionar quejas y asegurar la satisfacción del usuario. Sé empático, profesional y orientado a soluciones.";
-                break;
-            case "sales":
-                dynamicPrompt +=
-                    "Tu objetivo es ayudar a generar ventas, calificar leads, presentar productos/servicios de manera atractiva y guiar a los usuarios hacia la conversión. Sé persuasivo pero no agresivo.";
-                break;
-            case "technical-support":
-                dynamicPrompt +=
-                    "Especialízate en resolver problemas técnicos, proporcionar documentación, guías paso a paso y soluciones precisas. Sé detallado y técnico cuando sea necesario.";
-                break;
-            case "educational":
-                dynamicPrompt +=
-                    "Tu función es enseñar, explicar conceptos complejos de manera simple, proporcionar ejemplos prácticos y fomentar el aprendizaje. Sé didáctico y paciente.";
-                break;
-            case "consulting":
-                dynamicPrompt +=
-                    "Actúa como consultor experto, brinda asesoría estratégica, analiza situaciones y proporciona recomendaciones fundamentadas. Sé analítico y profesional.";
-                break;
-            case "general":
-            default:
-                dynamicPrompt +=
-                    "Eres un asistente versátil capaz de ayudar en múltiples áreas. Adapta tu estilo de respuesta según la consulta del usuario.";
-                break;
-        }
-    }
-
-    if (customPrompt) {
-        dynamicPrompt += `\n\nInstrucciones adicionales:\n${customPrompt}`;
-    }
-
-    dynamicPrompt +=
-        "\n\nSiempre responde de manera clara, profesional y útil.";
-
-    return dynamicPrompt;
-};
 
 // Componente de input con animación
 function AnimatedInput({
@@ -390,15 +257,15 @@ function AnimatedInput({
     return (
         <form
             className={cn(
-                "relative mx-auto min-h-12 w-full max-w-xl overflow-hidden bg-white shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),_0px_1px_0px_0px_rgba(25,28,33,0.02),_0px_0px_0px_1px_rgba(25,28,33,0.08)] transition-all duration-200 dark:bg-zinc-800 rounded-2xl",
-                value && "bg-gray-50 dark:bg-zinc-700",
+                "relative mx-auto min-h-12 w-full max-w-xl overflow-hidden bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-2xl",
+                value && "border-primary/30 shadow-md",
                 className
             )}
             onSubmit={handleSubmit}
         >
             <canvas
                 className={cn(
-                    "pointer-events-none absolute -left-2 top-2 origin-top-left scale-50 transform pr-20 text-base invert filter dark:invert-0",
+                    "pointer-events-none absolute -left-2 top-2 origin-top-left scale-50 transform pr-20 text-base invert filter",
                     !animating ? "opacity-0" : "opacity-100"
                 )}
                 ref={canvasRef}
@@ -416,8 +283,8 @@ function AnimatedInput({
                 value={value}
                 rows={1}
                 className={cn(
-                    "relative z-50 min-h-12 w-full border-none bg-transparent pl-4 pr-12 py-3 text-sm tracking-tight text-black focus:outline-none focus:ring-0 resize-none overflow-hidden dark:text-white",
-                    animating && "text-transparent dark:text-transparent"
+                    "relative z-50 min-h-12 w-full border-none bg-transparent pl-4 pr-12 py-3 text-sm tracking-tight text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0 resize-none overflow-hidden",
+                    animating && "text-transparent"
                 )}
             />
 
@@ -430,7 +297,7 @@ function AnimatedInput({
                         vanishAndSubmit();
                     }
                 }}
-                className="absolute right-2 bottom-2 z-50 flex h-8 w-8 items-center justify-center rounded-full bg-black transition duration-200 disabled:bg-gray-100 dark:bg-zinc-900 dark:disabled:bg-zinc-800"
+                className="absolute right-2 bottom-2 z-50 flex h-8 w-8 items-center justify-center rounded-full bg-primary hover:bg-primary/90 transition duration-200 disabled:bg-gray-200 disabled:cursor-not-allowed"
             >
                 <motion.div
                     initial={{ scale: 0 }}
@@ -447,25 +314,9 @@ function AnimatedInput({
 export default function Chatbot() {
     const [value, setValue] = useState("");
     const [searchEnabled, setSearchEnabled] = useState(true);
-    const [configOpen, setConfigOpen] = useState(false);
 
-    // Estados de configuración del chatbot
-    const [assistantName, setAssistantName] = useState("");
-    const [companyInfo, setCompanyInfo] = useState("");
-    const [chatIntent, setChatIntent] = useState("");
-    const [customPrompt, setCustomPrompt] = useState("");
-    const [useCustomConfig, setUseCustomConfig] = useState(false);
-
-    // Generar el prompt actual basado en la configuración
-    const getCurrentPrompt = () => {
-        return generateDynamicPrompt(
-            assistantName,
-            companyInfo,
-            chatIntent,
-            customPrompt,
-            useCustomConfig
-        );
-    };
+    // Hook para el límite diario
+    const { questionsLeft, isLimitReached, incrementUsage, maxQuestions } = useDailyLimit();
 
     const { messages, sendMessage, status, error, stop } = useChat({
         onError: (error) => {
@@ -484,13 +335,26 @@ export default function Chatbot() {
         e.preventDefault();
         if (!value.trim()) return;
 
+        // Verificar límite diario
+        if (isLimitReached) {
+            alert(`Has alcanzado el límite diario de ${maxQuestions} preguntas. Vuelve mañana o contacta a GRCP Argentina para más información.`);
+            return;
+        }
+
+        // Intentar incrementar el uso
+        const canProceed = incrementUsage();
+        if (!canProceed) {
+            alert(`Has alcanzado el límite diario de ${maxQuestions} preguntas. Vuelve mañana.`);
+            return;
+        }
+
         sendMessage(
             {
                 text: value,
             },
             {
                 body: {
-                    systemPrompt: getCurrentPrompt(),
+                    systemPrompt: GRCP_SYSTEM_PROMPT,
                 },
             }
         );
@@ -505,46 +369,10 @@ export default function Chatbot() {
         window.location.reload(); // Forma simple de limpiar la conversación
     };
 
-    // Manejar guardado de configuración
-    const handleSaveConfig = () => {
-        // Guardar en localStorage para persistencia
-        const config = {
-            assistantName,
-            companyInfo,
-            chatIntent,
-            customPrompt,
-            useCustomConfig,
-        };
-        localStorage.setItem("chatbot-config", JSON.stringify(config));
-        setConfigOpen(false);
-
-        // Si hay mensajes, reiniciar conversación para aplicar nueva configuración
-        if (messages.length > 0) {
-            clearConversation();
-        }
-    };
-
-    // Cargar configuración guardada al inicializar
-    React.useEffect(() => {
-        const savedConfig = localStorage.getItem("chatbot-config");
-        if (savedConfig) {
-            try {
-                const config = JSON.parse(savedConfig);
-                setAssistantName(config.assistantName || "");
-                setCompanyInfo(config.companyInfo || "");
-                setChatIntent(config.chatIntent || "");
-                setCustomPrompt(config.customPrompt || "");
-                setUseCustomConfig(config.useCustomConfig || false);
-            } catch (error) {
-                console.error("Error loading saved config:", error);
-            }
-        }
-    }, []);
-
     // Vista unificada que mantiene la misma UI siempre
     return (
         <section className="h-dvh min-h-dvh">
-            <div className="container py-4 px-2 mx-auto flex h-dvh w-full flex-col items-center justify-center">
+            <div className="container py-4 px-2 mx-auto flex h-dvh w-full flex-col items-center justify-center ">
                 <div className="flex h-full w-full max-w-4xl flex-col items-center justify-center gap-4">
                     {/* Header/Title - se reduce cuando hay mensajes */}
                     <motion.div
@@ -560,7 +388,7 @@ export default function Chatbot() {
                     >
                         <h1
                             className={cn(
-                                "font-semibold tracking-tighter transition-all duration-500",
+                                "font-bold tracking-tighter transition-all duration-500",
                                 messages.length > 0
                                     ? "text-2xl mb-2"
                                     : "text-5xl mb-8"
@@ -568,10 +396,10 @@ export default function Chatbot() {
                         >
                             <AuroraText
                                 colors={[
-                                    "#ffb199",
-                                    "#ffb199",
-                                    "#a3baff",
-                                    "#a3baff",
+                                    "#1C487E",
+                                    "#60a5fa",
+                                    "#1C487E",
+                                    "#3b82f6",
                                 ]}
                                 className={cn(
                                     "relative ",
@@ -579,37 +407,68 @@ export default function Chatbot() {
                                 )}
                             >
                                 {messages.length > 0
-                                    ? "ChatBot Devanthos"
-                                    : "¿En qué te puedo ayudar hoy?"}
+                                    ? "Asistente GRCP"
+                                    : "¿Cómo podemos ayudarte?"}
                             </AuroraText>
                             <AuroraText
                                 colors={[
-                                    "#ffb199",
-                                    "#ffb199",
-                                    "#a3baff",
-                                    "#a3baff",
+                                    "#1C487E",
+                                    "#60a5fa",
+                                    "#1C487E",
+                                    "#3b82f6",
                                 ]}
                                 className={cn(
                                     "absolute -z-10",
                                     messages.length > 0
                                         ? "top-0 -left-1/4 blur-lg"
-                                        : "-top-24 blur-xl md:-top-12"
+                                        : "-top-24 blur-xl  md:-top-12"
                                 )}
                             >
                                 {messages.length > 0
-                                    ? "ChatBot Devanthos"
-                                    : "¿En qué te puedo ayudar hoy?"}
+                                    ? "Asistente GRCP"
+                                    : "¿Cómo podemos ayudarte?"}
                             </AuroraText>
                         </h1>
                         {messages.length > 0 && (
-                            <motion.p
-                                className="text-sm text-muted-foreground"
+                            <motion.div
+                                className="flex flex-col gap-1 text-sm text-muted-foreground"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: 0.3 }}
                             >
-                                Powered by Google Gemini 2.5 Flash
-                            </motion.p>
+                                <p>Rescate • Capacitación • Prevención</p>
+                                <p className={cn(
+                                    "text-xs",
+                                    questionsLeft <= 3 && "text-orange-500 font-semibold",
+                                    isLimitReached && "text-red-500 font-bold"
+                                )}>
+                                    {isLimitReached 
+                                        ? `⚠️ Límite alcanzado (${maxQuestions}/${maxQuestions})` 
+                                        : `Preguntas disponibles: ${questionsLeft}/${maxQuestions}`}
+                                </p>
+                            </motion.div>
+                        )}
+                        {messages.length === 0 && (
+                            <motion.div
+                                className="mt-4 max-w-2xl mx-auto"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.4, duration: 0.6 }}
+                            >
+                                <div className="bg-blue-50 border-l-4 border-orange-400 p-4 rounded-lg">
+                                    <div className="flex items-start gap-3">
+                                        <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                                        <div className="text-sm text-blue-800">
+                                            <p className="font-semibold mb-1">⚠️ Aviso Importante</p>
+                                            <p className="text-xs leading-relaxed">
+                                                Este asistente proporciona información orientativa sobre primeros auxilios. 
+                                                <strong className="font-semibold"> NO sustituye atención médica profesional</strong>. 
+                                                En emergencias reales, llama al <strong className="font-bold">107</strong> inmediatamente.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
                         )}
                     </motion.div>
 
@@ -638,7 +497,7 @@ export default function Chatbot() {
                                                             y: 0,
                                                         }}
                                                         transition={{
-                                                            duration: 0.3,
+                                                            duration: 0.5,
                                                         }}
                                                     >
                                                         <Message
@@ -679,7 +538,7 @@ export default function Chatbot() {
                                                                                     key={
                                                                                         index
                                                                                     }
-                                                                                    className="prose prose-sm max-w-none dark:prose-invert"
+                                                                                    className="prose prose-sm max-w-none"
                                                                                 >
                                                                                     {
                                                                                         part.text
@@ -736,7 +595,7 @@ export default function Chatbot() {
                                                     <Message from="assistant">
                                                         <MessageAvatar
                                                             src="/bot-avatar.svg"
-                                                            name="Devanthos Bot"
+                                                            name="Asistente GRCP"
                                                             className="order-1 mb-auto"
                                                         />
                                                         <MessageContent variant="flat">
@@ -756,7 +615,7 @@ export default function Chatbot() {
                                                                         size={
                                                                             "icon"
                                                                         }
-                                                                        className="bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors dark:bg-red-900 dark:text-red-300"
+                                                                        className="bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors"
                                                                     >
                                                                         <CircleStop className="h-4 w-4" />
                                                                     </Button>
@@ -776,17 +635,17 @@ export default function Chatbot() {
                                                         opacity: 1,
                                                         y: 0,
                                                     }}
-                                                    className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:border-red-800"
+                                                    className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg"
                                                 >
-                                                    <div className="text-red-600 dark:text-red-400">
+                                                    <div className="text-red-600">
                                                         ⚠️
                                                     </div>
                                                     <div className="flex-1">
-                                                        <p className="text-red-800 dark:text-red-200 font-medium">
+                                                        <p className="text-red-800 font-medium">
                                                             Error en la
                                                             conversación
                                                         </p>
-                                                        <p className="text-red-600 dark:text-red-400 text-sm">
+                                                        <p className="text-red-600 text-sm">
                                                             Algo salió mal. Por
                                                             favor, inténtalo de
                                                             nuevo.
@@ -849,7 +708,9 @@ export default function Chatbot() {
                         transition={{ duration: 0.8, delay: 0.6 }}
                     >
                         <AnimatedInput
-                            placeholder="¿Cómo te puedo ayudar hoy?"
+                            placeholder={isLimitReached 
+                                ? "⚠️ Límite diario alcanzado" 
+                                : "Escribe tu pregunta sobre primeros auxilios, RCP o emergencias..."}
                             className="mb-4 min-h-12 w-full max-w-full bg-transparent shadow-none"
                             onChange={handleChange}
                             onSubmit={handleSubmit}
@@ -859,6 +720,19 @@ export default function Chatbot() {
 
                         <div className="flex h-10 w-full items-center justify-between">
                             <div className="flex items-center gap-4">
+                                {messages.length === 0 && (
+                                    <span className={cn(
+                                        "text-xs px-3 py-1.5 rounded-full font-medium",
+                                        questionsLeft <= 3 
+                                            ? "bg-amber-50 text-amber-700 border border-amber-200" 
+                                            : "bg-sky-50 text-sky-700 border border-sky-200",
+                                        isLimitReached && "bg-red-50 text-red-700 border border-red-200"
+                                    )}>
+                                        {isLimitReached 
+                                            ? `⚠️ Límite alcanzado (${maxQuestions}/${maxQuestions})` 
+                                            : `${questionsLeft}/${maxQuestions} preguntas disponibles`}
+                                    </span>
+                                )}
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <span
@@ -868,7 +742,7 @@ export default function Chatbot() {
                                             className={cn(
                                                 "flex cursor-pointer items-center gap-2 rounded-full px-2 py-1 text-sm transition-all",
                                                 searchEnabled &&
-                                                    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                                    "bg-sky-900 text-sky-300 dark:text-sky-300"
                                             )}
                                         >
                                             <motion.span
@@ -923,224 +797,6 @@ export default function Chatbot() {
                                         </TooltipContent>
                                     </Tooltip>
                                 )}
-
-                                <Dialog
-                                    open={configOpen}
-                                    onOpenChange={setConfigOpen}
-                                >
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <DialogTrigger asChild>
-                                                <Settings className="size-4 cursor-pointer text-muted-foreground hover:text-foreground transition-colors" />
-                                            </DialogTrigger>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>Configurar chatbot</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                    <DialogContent className="sm:max-w-2xl max-h-[95vh] overflow-y-auto md:[&::-webkit-scrollbar]:w-2.5 md:[&::-webkit-scrollbar-track]:rounded-full md:[&::-webkit-scrollbar-track]:bg-gray-100 md:[&::-webkit-scrollbar-thumb]:rounded-full md:[&::-webkit-scrollbar-thumb]:bg-gray-300 md:dark:[&::-webkit-scrollbar-track]:bg-neutral-700 md:dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
-                                        <DialogHeader>
-                                            <DialogTitle className="md:text-xl">
-                                                Configuración del Chatbot
-                                            </DialogTitle>
-                                            <DialogDescription className="text-balance">
-                                                Personaliza el comportamiento
-                                                del asistente{" "}
-                                                <strong className="hidden sm:inline">
-                                                    {" "}
-                                                    para tener un demo
-                                                    interactivo con los datos de
-                                                    tu empresa.
-                                                </strong>{" "}
-                                                Si no configuras nada, se usará
-                                                el prompt predeterminado de
-                                                Devanthos.
-                                            </DialogDescription>
-                                        </DialogHeader>
-                                        <div className="grid gap-6 py-4">
-                                            {/* Toggle para usar configuración personalizada */}
-                                            <div className="flex items-center space-x-2">
-                                                <Checkbox
-                                                    id="use-custom-config"
-                                                    checked={useCustomConfig}
-                                                    onCheckedChange={(
-                                                        checked
-                                                    ) =>
-                                                        setUseCustomConfig(
-                                                            checked === true
-                                                        )
-                                                    }
-                                                    className="rounded border-gray-300"
-                                                />
-                                                <Label
-                                                    htmlFor="use-custom-config"
-                                                    className="text-sm font-medium"
-                                                >
-                                                    Usar configuración
-                                                    personalizada
-                                                </Label>
-                                            </div>
-
-                                            {useCustomConfig && (
-                                                <>
-                                                    {/* Nombre del Asistente */}
-                                                    <div className="space-y-1">
-                                                        <Label
-                                                            htmlFor="assistant-name"
-                                                            className="text-sm font-medium"
-                                                        >
-                                                            Nombre del Asistente
-                                                        </Label>
-                                                        <Input
-                                                            id="assistant-name"
-                                                            value={
-                                                                assistantName
-                                                            }
-                                                            onChange={(e) =>
-                                                                setAssistantName(
-                                                                    e.target
-                                                                        .value
-                                                                )
-                                                            }
-                                                            placeholder="Ej: María, Asistente Virtual, Bot de Soporte..."
-                                                        />
-                                                    </div>
-
-                                                    {/* Información de la Empresa */}
-                                                    <div className="space-y-2">
-                                                        <Label
-                                                            htmlFor="company-info"
-                                                            className="text-sm font-medium"
-                                                        >
-                                                            Información de la
-                                                            Empresa
-                                                        </Label>
-                                                        <Input
-                                                            id="company-info"
-                                                            value={companyInfo}
-                                                            onChange={(e) =>
-                                                                setCompanyInfo(
-                                                                    e.target
-                                                                        .value
-                                                                )
-                                                            }
-                                                            placeholder="Ej: TechCorp, tu empresa de tecnología de confianza..."
-                                                        />
-                                                    </div>
-
-                                                    {/* Intencionalidad del Chat */}
-                                                    <div className="space-y-2">
-                                                        <Label
-                                                            htmlFor="chat-intent"
-                                                            className="text-sm font-medium"
-                                                        >
-                                                            Propósito del
-                                                            Chatbot
-                                                        </Label>
-                                                        <Select
-                                                            value={chatIntent}
-                                                            onValueChange={
-                                                                setChatIntent
-                                                            }
-                                                        >
-                                                            <SelectTrigger className="text-start py-6 max-w-86">
-                                                                <SelectValue placeholder="Selecciona el propósito del chatbot" />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                {CHAT_INTENTS.map(
-                                                                    (
-                                                                        intent
-                                                                    ) => (
-                                                                        <SelectItem
-                                                                            key={
-                                                                                intent.value
-                                                                            }
-                                                                            value={
-                                                                                intent.value
-                                                                            }
-                                                                        >
-                                                                            <div className="flex items-center gap-2">
-                                                                                <intent.icon className="hidden md:block" />
-                                                                                <div className="flex flex-col">
-                                                                                    <span className="font-medium">
-                                                                                        {
-                                                                                            intent.label
-                                                                                        }
-                                                                                    </span>
-                                                                                    <span className="text-xs text-muted-foreground">
-                                                                                        {
-                                                                                            intent.description
-                                                                                        }
-                                                                                    </span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </SelectItem>
-                                                                    )
-                                                                )}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-
-                                                    {/* Prompt Personalizado */}
-                                                    <div className="space-y-2">
-                                                        <Label
-                                                            htmlFor="custom-prompt"
-                                                            className="text-sm font-medium"
-                                                        >
-                                                            Instrucciones
-                                                            Adicionales
-                                                            (Opcional)
-                                                        </Label>
-                                                        <Textarea
-                                                            id="custom-prompt"
-                                                            value={customPrompt}
-                                                            onChange={(e) =>
-                                                                setCustomPrompt(
-                                                                    e.target
-                                                                        .value
-                                                                )
-                                                            }
-                                                            placeholder="Agrega instrucciones específicas sobre cómo quieres que se comporte el asistente..."
-                                                            className="min-h-[80px] resize-none"
-                                                        />
-                                                    </div>
-                                                </>
-                                            )}
-
-                                            {/* Vista previa del prompt */}
-                                            <div className="space-y-2">
-                                                <Label className="text-sm font-medium">
-                                                    Vista Previa del Prompt
-                                                </Label>
-                                                <div className="p-3 bg-muted rounded-lg text-xs max-h-32 overflow-y-auto md:[&::-webkit-scrollbar]:w-2.5 md:[&::-webkit-scrollbar-track]:rounded-full md:[&::-webkit-scrollbar-track]:bg-gray-100 md:[&::-webkit-scrollbar-thumb]:rounded-full md:[&::-webkit-scrollbar-thumb]:bg-gray-300 md:dark:[&::-webkit-scrollbar-track]:bg-neutral-700 md:dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
-                                                    <pre className="whitespace-pre-wrap font-mono">
-                                                        {getCurrentPrompt().substring(
-                                                            0,
-                                                            500
-                                                        )}
-                                                        ...
-                                                    </pre>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <DialogFooter className="flex gap-2">
-                                            <DialogClose asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    className="flex-1"
-                                                >
-                                                    Cancelar
-                                                </Button>
-                                            </DialogClose>
-                                            <Button
-                                                onClick={handleSaveConfig}
-                                                className="flex-1"
-                                            >
-                                                Guardar Configuración
-                                            </Button>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
                             </div>
                         </div>
                     </motion.div>

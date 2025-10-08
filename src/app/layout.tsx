@@ -19,8 +19,8 @@ export const viewport: Viewport = {
     ],
 };
 const siteConfig = {
-    name: "Devi | Asistente de Devanthos",
-    description: "Asistente virtual para consultas y soporte en Devanthos",
+    name: "GRCP IA | Asistente de GRCP Argentina",
+    description: "Asistente virtual para consultas GRCP Argentina",
 };
 
 export const metadata: Metadata = {
@@ -31,36 +31,13 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     keywords: ["Devanthos", "Devi", "Asistente Virtual"],
     icons: {
-        icon: "/favicon.svg",
-        apple: "/favicon.svg",
-        shortcut: "/favicon.svg",
+        icon: "/GRCP LOGO - COLORES E ICONOS 2024 .png",
+        apple: "/GRCP LOGO - COLORES E ICONOS 2024 .png",
+        shortcut: "y/GRCP LOGO - COLORES E ICONOS 2024 .png",
     },
     // manifest: "/manifest.json",
-    creator: "Juan Morales",
-    // openGraph: {
-    //     title: siteConfig.name,
-    //     description: siteConfig.description,
-    //     url: "https://pichirika.com",
-    //     siteName: "PichiriKa",
-    //     images: [
-    //         {
-    //             url: "https://pichirika.com/Metadata.jpg",
-    //             width: 1200,
-    //             height: 630,
-    //         },
-    //     ],
-    //     locale: "es_AR",
-    //     type: "website",
-    // },
-    // twitter: {
-    //     card: "summary_large_image",
-    //     title: siteConfig.name,
-    //     description: siteConfig.description,
-    //     siteId: "1467726470533754880",
-    //     creator: "@Juanmora1810",
-    //     creatorId: "1467726470533754880",
-    //     images: ["https://pichirika.com/Metadata.jpg"],
-    // },
+    creator: "Julian Peruzzi",
+    publisher: "Julian Peruzzi",
 };
 
 export default function RootLayout({
@@ -74,7 +51,7 @@ export default function RootLayout({
                 className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-dvh dark w-full relative`}
             >
                 <div
-                    className="absolute inset-0 z-0"
+                    className="absolute inset-0 z-0 "
                     style={{
                         background: `
                             radial-gradient(ellipse 120% 80% at 70% 20%, rgba(255, 20, 147, 0.15), transparent 50%),

@@ -1,6 +1,6 @@
 import { google } from "@ai-sdk/google";
 import { convertToModelMessages, streamText, UIMessage } from "ai";
-import { DEVANTHOS_SYSTEM_PROMPT } from "@/lib/devanthos-prompt";
+import { GRCP_SYSTEM_PROMPT } from "@/lib/grcp-prompt";
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -15,8 +15,8 @@ export async function POST(req: Request) {
             systemPrompt?: string;
         } = await req.json();
 
-        // Usar el prompt personalizado si se proporciona, sino usar el predeterminado de Devanthos
-        const finalSystemPrompt = systemPrompt || DEVANTHOS_SYSTEM_PROMPT;
+        // Usar el prompt personalizado si se proporciona, sino usar el predeterminado de GRCP
+        const finalSystemPrompt = systemPrompt || GRCP_SYSTEM_PROMPT;
 
         // Create a chat completion stream with Google Gemini
         const result = await streamText({
